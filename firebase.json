@@ -1,0 +1,9 @@
+{
+  "functions": {
+    "source": "functions",
+    "predeploy": [
+      "npm run build",
+      "cp -r .next functions/.next"
+    ]
+  }
+}
