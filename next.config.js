@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
   // IMPORTANTE: Esto optimiza el build para entornos de servidor como Cloud Functions
   output: 'standalone', 
   // Permitimos que Firebase maneje la compresión

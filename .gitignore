@@ -9,7 +9,11 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
-
+.next
+functions/.next
+functions/lib
+node_modules
+functions/node_modules
 # testing
 /coverage
 
