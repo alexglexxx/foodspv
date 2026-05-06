@@ -11,25 +11,17 @@ const db = admin.firestore();
 const WHATSAPP_TOKEN = defineSecret("WHATSAPP_TOKEN");
 const WHATSAPP_PHONE_ID = defineSecret("WHATSAPP_PHONE_ID");
 
-// 🚀 1. NEXT.JS SSR
+// 🚀 1. NEXT.JS SSR (Carga el servidor generado en modo standalone)
+const nextServer = require("./server");
+
 export const nextApp = onRequest(
   {
     region: "us-central1",
-    memory: "512MiB",
+    memory: "1GiB", // 1GB necesario para que el SSR de Next.js funcione fluido
     minInstances: 1,
   },
-  async (req, res) => {
-    const next = require("next");
-
-    const app = next({
-      dev: false,
-      conf: { distDir: ".next" },
-    });
-
-    const handle = app.getRequestHandler();
-
-    await app.prepare();
-    return handle(req, res);
+  (req, res) => {
+    return nextServer.handler(req, res);
   }
 );
 
