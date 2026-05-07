@@ -1,5 +1,7 @@
 import "./globals.css";
 
+import { AuthProvider } from "@/context/AuthContext";
+
 export const metadata = {
   title: "Foodspv",
   description: "Plataforma de gestión",
@@ -12,7 +14,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <body>{children}</body>
+      <body>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+      </body>
     </html>
   );
 }
