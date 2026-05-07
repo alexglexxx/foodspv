@@ -1,0 +1,172 @@
+.
+├── AGENTS.md
+├── CLAUDE.md
+├── README.md
+├── app
+│   ├── [tenant]
+│   ├── admin
+│   ├── favicon.ico
+│   ├── firebaseClient.js
+│   ├── globals.css
+│   ├── layout.tsx
+│   ├── layout.ysx
+│   ├── login
+│   ├── menu
+│   ├── page.tsx
+│   ├── superadmin
+│   └── tenant
+├── apphosting.yaml
+├── eslint.config.mjs
+├── estructura.txt
+├── firebase.json
+├── firestore.indexes.json
+├── firestore.rules
+├── functions
+│   ├── lib
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── src
+│   ├── tsconfig.dev.json
+│   └── tsconfig.json
+├── lib
+│   └── firebase.ts
+├── middleware.ts
+├── next-env.d.ts
+├── next.config.js
+├── node_modules
+│   ├── @alloc
+│   ├── @firebase
+│   ├── @grpc
+│   ├── @jridgewell
+│   ├── @next
+│   ├── @nodelib
+│   ├── @protobufjs
+│   ├── @swc
+│   ├── @types
+│   ├── ansi-regex
+│   ├── ansi-styles
+│   ├── any-promise
+│   ├── anymatch
+│   ├── arg
+│   ├── autoprefixer
+│   ├── baseline-browser-mapping
+│   ├── binary-extensions
+│   ├── braces
+│   ├── browserslist
+│   ├── busboy
+│   ├── camelcase-css
+│   ├── caniuse-lite
+│   ├── chokidar
+│   ├── client-only
+│   ├── cliui
+│   ├── color-convert
+│   ├── color-name
+│   ├── commander
+│   ├── cssesc
+│   ├── csstype
+│   ├── didyoumean
+│   ├── dlv
+│   ├── electron-to-chromium
+│   ├── emoji-regex
+│   ├── es-errors
+│   ├── escalade
+│   ├── fast-glob
+│   ├── fastq
+│   ├── faye-websocket
+│   ├── fill-range
+│   ├── firebase
+│   ├── fraction.js
+│   ├── function-bind
+│   ├── get-caller-file
+│   ├── glob-parent
+│   ├── graceful-fs
+│   ├── hasown
+│   ├── http-parser-js
+│   ├── idb
+│   ├── is-binary-path
+│   ├── is-core-module
+│   ├── is-extglob
+│   ├── is-fullwidth-code-point
+│   ├── is-glob
+│   ├── is-number
+│   ├── jiti
+│   ├── js-tokens
+│   ├── lilconfig
+│   ├── lines-and-columns
+│   ├── lodash.camelcase
+│   ├── long
+│   ├── loose-envify
+│   ├── merge2
+│   ├── micromatch
+│   ├── mz
+│   ├── nanoid
+│   ├── next
+│   ├── node-releases
+│   ├── normalize-path
+│   ├── object-assign
+│   ├── object-hash
+│   ├── path-parse
+│   ├── picocolors
+│   ├── picomatch
+│   ├── pify
+│   ├── pirates
+│   ├── postcss
+│   ├── postcss-import
+│   ├── postcss-js
+│   ├── postcss-load-config
+│   ├── postcss-nested
+│   ├── postcss-selector-parser
+│   ├── postcss-value-parser
+│   ├── protobufjs
+│   ├── queue-microtask
+│   ├── react
+│   ├── react-dom
+│   ├── read-cache
+│   ├── readdirp
+│   ├── require-directory
+│   ├── resolve
+│   ├── reusify
+│   ├── run-parallel
+│   ├── safe-buffer
+│   ├── scheduler
+│   ├── source-map-js
+│   ├── streamsearch
+│   ├── string-width
+│   ├── strip-ansi
+│   ├── styled-jsx
+│   ├── sucrase
+│   ├── supports-preserve-symlinks-flag
+│   ├── tailwindcss
+│   ├── thenify
+│   ├── thenify-all
+│   ├── tinyglobby
+│   ├── to-regex-range
+│   ├── ts-interface-checker
+│   ├── tslib
+│   ├── typescript
+│   ├── undici
+│   ├── undici-types
+│   ├── update-browserslist-db
+│   ├── util-deprecate
+│   ├── websocket-driver
+│   ├── websocket-extensions
+│   ├── wrap-ansi
+│   ├── y18n
+│   ├── yargs
+│   └── yargs-parser
+├── package-lock.json
+├── package.json
+├── postcss.config.js
+├── postcss.config.mjs
+├── public
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── next.svg
+│   ├── vercel.svg
+│   └── window.svg
+├── skills-lock.json
+├── tailwind.config.js
+├── tsconfig.json
+└── tsconfig.tsbuildinfo
+
+133 directories, 36 files
