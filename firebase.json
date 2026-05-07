@@ -1,13 +1,22 @@
 {
-  "functions": {
-    "source": "functions",
-    "runtime": "nodejs20",
-    "predeploy": [
-      "npm run build --prefix ..",
-      "rm -rf ./functions/.next",
-      "cp -r ../.next/standalone/. ./functions/",
-      "cp -r ../.next/static ./functions/.next/static",
-      "cp -r ../public ./functions/public"
+  "hosting": {
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "function": "app"
+      }
     ]
-  }
+  },
+  "functions": {
+    "source": "functions"
+  },
+  "predeploy": [
+    "npm run build"
+  ]
 }
