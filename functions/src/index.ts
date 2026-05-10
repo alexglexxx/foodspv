@@ -53,14 +53,20 @@ export const notifyOrder = onDocumentCreated(
       }
 
       const items = pedido.items
-        .map((i: any) => `• ${i.cantidad}x ${i.nombre}`)
+        .map((i: any) => `• ${i.cantidad}x ${i.nombre} ($${(i.precio * i.cantidad).toFixed(2)})`)
         .join("\n");
 
-      const mensaje = `🍔 Nueva orden en ${tenantData?.name || tenantId}
-
+      const mensaje = `🍔 *NUEVO PEDIDO* 🍔
+--------------------------
+👤 *Cliente:* ${pedido.cliente?.nombre || "N/A"}
+📞 *Teléfono:* ${pedido.cliente?.telefono || "N/A"}
+--------------------------
+📝 *Detalle:*
 ${items}
 
-Total: $${pedido.total}`;
+💰 *TOTAL:* $${pedido.total.toFixed(2)}
+--------------------------
+_Enviado desde FoodSPV_`;
 
       await axios.post(
         `https://graph.facebook.com/v17.0/${WHATSAPP_PHONE_ID.value()}/messages`,

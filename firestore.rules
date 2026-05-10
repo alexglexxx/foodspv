@@ -1,18 +1,59 @@
-rules_version='2'
+rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      // This rule allows anyone with your database reference to view, edit,
-      // and delete all data in your database. It is useful for getting
-      // started, but it is configured to expire after 30 days because it
-      // leaves your app open to attackers. At that time, all client
-      // requests to your database will be denied.
-      //
-      // Make sure to write security rules for your app before that time, or
-      // else all client requests to your database will be denied until you
-      // update your rules.
-      allow read, write: if request.time < timestamp.date(2026, 5, 23);
+    
+    // Función para verificar si el usuario es Superadmin
+    function isSuperAdmin() {
+      return request.auth != null && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin';
+    }
+
+    // Función para verificar si el usuario es Admin del tenant específico
+    function isAdminOf(tenantId) {
+      return request.auth != null && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.tenantId == tenantId;
+    }
+
+    // --- REGLAS DE USUARIOS ---
+    match /users/{userId} {
+      // Solo el Superadmin o el propio usuario pueden ver su perfil
+      allow read: if request.auth != null && (request.auth.uid == userId || isSuperAdmin());
+      // Solo el Superadmin puede crear/editar roles
+      allow write: if isSuperAdmin();
+    }
+
+    // --- REGLAS DE TENANTS (Restaurantes) ---
+    match /tenants/{tenantId} {
+      // El público puede leer la info básica del restaurante
+      allow read: if true;
+      
+      // Solo Superadmin puede crear o borrar restaurantes
+      allow create, delete: if isSuperAdmin();
+      
+      // El Admin del restaurante o Superadmin pueden editar la info
+      allow update: if isSuperAdmin() || isAdminOf(tenantId);
+
+      // --- SUB-COLECCIÓN: MENÚ ---
+      match /menu/{productId} {
+        // El público puede ver el menú
+        allow read: if true;
+        // Solo el Admin del tenant o Superadmin pueden modificar productos
+        allow write: if isSuperAdmin() || isAdminOf(tenantId);
+      }
+
+      // --- SUB-COLECCIÓN: PEDIDOS ---
+      match /orders/{orderId} {
+        // Los clientes pueden crear pedidos (write)
+        // No permitimos 'update' ni 'delete' al público
+        allow create: if true;
+        
+        // Solo el Admin del tenant o Superadmin pueden ver y actualizar los pedidos
+        allow read, update: if isSuperAdmin() || isAdminOf(tenantId);
+        
+        // Nadie (excepto quizá Superadmin) debería borrar pedidos por integridad
+        allow delete: if isSuperAdmin();
+      }
     }
   }
 }
