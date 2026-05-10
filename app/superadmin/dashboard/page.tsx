@@ -117,41 +117,45 @@ export default function SuperAdminDashboard() {
 
   return (
     <ProtectedRoute allowedRole="superadmin">
-      <div className="min-h-screen bg-zinc-950 text-white flex">
+      <div className="min-h-screen bg-zinc-950 text-white flex flex-col md:flex-row">
         {/* Sidebar */}
-        <aside className="w-64 bg-zinc-900 border-r border-zinc-800 p-6 flex flex-col gap-8">
-          <div className="flex items-center gap-3 px-2">
-            <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-              <LayoutDashboard className="w-5 h-5 text-black" />
+        <aside className="w-full md:w-64 bg-zinc-900 border-b md:border-r border-zinc-800 p-4 md:p-6 flex flex-col gap-4 md:gap-8 shrink-0 z-10">
+          <div className="flex flex-col md:flex-col gap-4 md:gap-8">
+            <div className="flex justify-between items-center px-2">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                  <LayoutDashboard className="w-5 h-5 text-black" />
+                </div>
+                <span className="font-bold text-xl tracking-tight">FoodSPV</span>
+              </div>
             </div>
-            <span className="font-bold text-xl tracking-tight">FoodSPV</span>
+
+            <nav className="flex flex-row md:flex-col gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+              <button 
+                onClick={() => setActiveTab("tenants")}
+                className={`flex items-center gap-3 px-4 py-2.5 md:py-3 rounded-xl transition-all whitespace-nowrap ${activeTab === "tenants" ? "bg-green-500 text-black font-bold shadow-[0_0_20px_rgba(34,197,94,0.2)]" : "text-zinc-400 hover:bg-zinc-800"}`}
+              >
+                <Store className="w-5 h-5 shrink-0" />
+                <span className="md:inline">Tenants</span>
+              </button>
+              <button 
+                onClick={() => setActiveTab("products")}
+                className={`flex items-center gap-3 px-4 py-2.5 md:py-3 rounded-xl transition-all whitespace-nowrap ${activeTab === "products" ? "bg-green-500 text-black font-bold shadow-[0_0_20px_rgba(34,197,94,0.2)]" : "text-zinc-400 hover:bg-zinc-800"}`}
+              >
+                <Utensils className="w-5 h-5 shrink-0" />
+                <span className="md:inline">Productos</span>
+              </button>
+              <button 
+                onClick={() => setActiveTab("analytics")}
+                className={`flex items-center gap-3 px-4 py-2.5 md:py-3 rounded-xl transition-all whitespace-nowrap ${activeTab === "analytics" ? "bg-green-500 text-black font-bold shadow-[0_0_20px_rgba(34,197,94,0.2)]" : "text-zinc-400 hover:bg-zinc-800"}`}
+              >
+                <BarChart3 className="w-5 h-5 shrink-0" />
+                <span className="md:inline">Métricas</span>
+              </button>
+            </nav>
           </div>
 
-          <nav className="flex flex-col gap-2">
-            <button 
-              onClick={() => setActiveTab("tenants")}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === "tenants" ? "bg-green-500 text-black font-bold shadow-[0_0_20px_rgba(34,197,94,0.2)]" : "text-zinc-400 hover:bg-zinc-800"}`}
-            >
-              <Store className="w-5 h-5" />
-              Tenants
-            </button>
-            <button 
-              onClick={() => setActiveTab("products")}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === "products" ? "bg-green-500 text-black font-bold shadow-[0_0_20px_rgba(34,197,94,0.2)]" : "text-zinc-400 hover:bg-zinc-800"}`}
-            >
-              <Utensils className="w-5 h-5" />
-              Productos
-            </button>
-            <button 
-              onClick={() => setActiveTab("analytics")}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === "analytics" ? "bg-green-500 text-black font-bold shadow-[0_0_20px_rgba(34,197,94,0.2)]" : "text-zinc-400 hover:bg-zinc-800"}`}
-            >
-              <BarChart3 className="w-5 h-5" />
-              Métricas
-            </button>
-          </nav>
-
-          <div className="mt-auto">
+          <div className="hidden md:block mt-auto">
             <div className="p-4 bg-zinc-800/50 rounded-2xl border border-zinc-700/50">
               <p className="text-xs text-zinc-500 mb-1">Usuario</p>
               <p className="text-sm font-medium truncate">{auth?.currentUser?.email}</p>
@@ -160,7 +164,7 @@ export default function SuperAdminDashboard() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-8 overflow-y-auto">
+        <main className="flex-1 p-4 md:p-8 overflow-y-auto w-full">
           {activeTab === "tenants" && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <header className="flex justify-between items-end mb-8">

@@ -23,12 +23,12 @@ export default function ProtectedRoute({
     if (loading) return;
 
     if (!user) {
-      router.push("/superadmin");
+      router.push("/login");
       return;
     }
 
     if (role !== allowedRole) {
-      router.push("/superadmin");
+      router.push("/login");
     }
   }, [user, role, loading, allowedRole, router]);
 

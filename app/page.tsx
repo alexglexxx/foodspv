@@ -19,8 +19,8 @@ export default function HomePage() {
           </Link>
 
           <Link
-            href="/superadmin"
-            className="bg-zinc-800 hover:bg-zinc-700 px-6 py-3 rounded-lg font-semibold"
+            href="/login"
+            className="bg-zinc-800 hover:bg-zinc-700 px-6 py-3 rounded-lg font-semibold transition"
           >
             Acceso administración
           </Link>

@@ -80,7 +80,11 @@ export default function AdminDashboard() {
           });
 
           return () => unsub();
+        } else {
+          setLoading(false);
         }
+      } else {
+        setLoading(false);
       }
     };
 
@@ -113,6 +117,22 @@ export default function AdminDashboard() {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
         <div className="w-10 h-10 border-4 border-zinc-800 border-t-green-500 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!tenantId) {
+    return (
+      <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center p-6">
+        <div className="text-center bg-zinc-900 p-8 rounded-3xl border border-zinc-800 shadow-2xl max-w-md">
+          <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <X className="w-8 h-8 text-red-500" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">Restaurante no asignado</h2>
+          <p className="text-zinc-400">
+            Tu cuenta administrativa no tiene ningún restaurante vinculado. Por favor, contacta al soporte técnico.
+          </p>
+        </div>
       </div>
     );
   }
