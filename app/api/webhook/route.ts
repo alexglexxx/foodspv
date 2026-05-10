@@ -8,6 +8,8 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 
+export const dynamic = "force-dynamic";
+
 // ========================================
 // VERIFY TOKEN
 // ========================================

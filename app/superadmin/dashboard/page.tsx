@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { db } from "@/lib/firebase";
+import { db, auth } from "@/lib/firebase";
 import {
   collection,
   getDocs,
@@ -13,7 +13,6 @@ import {
   onSnapshot,
   query,
 } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { 
   LayoutDashboard, 
@@ -43,9 +42,9 @@ export default function SuperAdminDashboard() {
   const [newTenant, setNewTenant] = useState({ name: "", notifyPhone: "", active: true });
   const [newProduct, setNewProduct] = useState({ nombre: "", precio: 0, descripcion: "", categoria: "Populares", imagenUrl: "" });
 
-  const auth = getAuth();
-
   useEffect(() => {
+    if (!db) return;
+
     const unsubTenants = onSnapshot(collection(db, "tenants"), (snap) => {
       const lista = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setTenants(lista);
@@ -57,7 +56,7 @@ export default function SuperAdminDashboard() {
   }, []);
 
   useEffect(() => {
-    if (selectedTenant) {
+    if (selectedTenant && db) {
       const unsubProducts = onSnapshot(collection(db, "tenants", selectedTenant.id, "menu"), (snap) => {
         setProducts(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       });
@@ -66,6 +65,7 @@ export default function SuperAdminDashboard() {
   }, [selectedTenant]);
 
   async function calculateAnalytics(tenantList: any[]) {
+    if (!db) return;
     const data = await Promise.all(tenantList.map(async (t) => {
       const ordersSnap = await getDocs(collection(db, "tenants", t.id, "orders"));
       return {
@@ -77,12 +77,12 @@ export default function SuperAdminDashboard() {
   }
 
   async function handleCreateTenant() {
-    if (!newTenant.name || !newTenant.notifyPhone) return alert("Completa los campos");
+    if (!db || !newTenant.name || !newTenant.notifyPhone) return alert("Completa los campos");
     try {
       await addDoc(collection(db, "tenants"), {
         ...newTenant,
         createdAt: new Date(),
-        ownerId: auth.currentUser?.uid
+        ownerId: auth?.currentUser?.uid
       });
       setNewTenant({ name: "", notifyPhone: "", active: true });
     } catch (e) {
@@ -91,7 +91,7 @@ export default function SuperAdminDashboard() {
   }
 
   async function handleCreateProduct() {
-    if (!selectedTenant || !newProduct.nombre) return alert("Selecciona un tenant y nombre");
+    if (!db || !selectedTenant || !newProduct.nombre) return alert("Selecciona un tenant y nombre");
     try {
       await addDoc(collection(db, "tenants", selectedTenant.id, "menu"), {
         ...newProduct,
@@ -104,10 +104,12 @@ export default function SuperAdminDashboard() {
   }
 
   async function toggleTenantStatus(id: string, currentStatus: boolean) {
+    if (!db) return;
     await updateDoc(doc(db, "tenants", id), { active: !currentStatus });
   }
 
   async function deleteProduct(id: string) {
+    if (!db) return;
     if (confirm("¿Borrar producto?")) {
       await deleteDoc(doc(db, "tenants", selectedTenant.id, "menu", id));
     }
@@ -152,7 +154,7 @@ export default function SuperAdminDashboard() {
           <div className="mt-auto">
             <div className="p-4 bg-zinc-800/50 rounded-2xl border border-zinc-700/50">
               <p className="text-xs text-zinc-500 mb-1">Usuario</p>
-              <p className="text-sm font-medium truncate">{auth.currentUser?.email}</p>
+              <p className="text-sm font-medium truncate">{auth?.currentUser?.email}</p>
             </div>
           </div>
         </aside>

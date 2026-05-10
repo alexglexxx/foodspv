@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { db } from "@/lib/firebase";
+import { db, auth } from "@/lib/firebase";
 import {
   collection,
   onSnapshot,
@@ -11,7 +11,6 @@ import {
   query,
   orderBy,
 } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { 
   ShoppingBag, 
@@ -49,12 +48,10 @@ export default function AdminDashboard() {
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [qrUrl, setQrUrl] = useState("");
 
-  const auth = getAuth();
-
   useEffect(() => {
     const init = async () => {
-      const user = auth.currentUser;
-      if (!user) return;
+      const user = auth?.currentUser;
+      if (!user || !db) return;
 
       const userDoc = await getDoc(doc(db, "users", user.uid));
       if (userDoc.exists()) {

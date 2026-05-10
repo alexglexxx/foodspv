@@ -2,13 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { db } from "@/lib/firebase";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { db, auth } from "@/lib/firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 
 export default function LoginPage() {
   const router = useRouter();
-  const auth = getAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,6 +20,7 @@ export default function LoginPage() {
     setError("");
 
     try {
+      if (!auth || !db) throw new Error("Firebase not initialized");
       // 🔐 Sanitización básica
       const cleanEmail = email.trim().toLowerCase();
 

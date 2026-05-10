@@ -1,6 +1,6 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
+import { getFirestore, Firestore } from "firebase/firestore";
+import { getAuth, Auth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -11,9 +11,24 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Singleton pattern para evitar inicializaciones múltiples en Hot Reload
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+// Validar que tengamos la configuración mínima para inicializar
+const isConfigValid = !!firebaseConfig.apiKey;
 
-export const db = getFirestore(app);
-export const auth = getAuth(app);
-export { app };
+let app: FirebaseApp;
+let db: Firestore;
+let auth: Auth;
+
+if (isConfigValid) {
+  app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+  db = getFirestore(app);
+  auth = getAuth(app);
+} else {
+  // Durante el build de Next.js, si no hay variables de entorno,
+  // inicializamos con valores dummy o dejamos que falle solo al usarlo.
+  // Esto evita que 'next build' falle al importar este archivo.
+  if (process.env.NODE_ENV === "production" && !process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+    console.warn("⚠️ Firebase config is missing. This is expected during some build phases if secrets are not available.");
+  }
+}
+
+export { app, db, auth };

@@ -3,10 +3,10 @@
 import { ReactNode, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 
-import { db } from "@/lib/firebase";
+import { db, auth } from "@/lib/firebase";
 
 interface Props {
   children: ReactNode;
@@ -19,7 +19,10 @@ export default function SuperAdminGuard({ children }: Props) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const auth = getAuth();
+    if (!auth || !db) {
+      setLoading(false);
+      return;
+    }
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       try {

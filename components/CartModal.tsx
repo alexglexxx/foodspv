@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useCart } from "@/context/CartContext";
-import { X, Minus, Plus, ShoppingBag, Loader2, Store, CheckCircle2, AlertCircle, MapPin, Phone } from "lucide-react";
+import { X, Minus, Plus, ShoppingBag, Loader2, Store, CheckCircle2, AlertCircle, MapPin, Phone, DollarSign } from "lucide-react";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
@@ -21,6 +21,8 @@ export default function CartModal({ isOpen, onClose, tenantId, tenantPhone }: Ca
   const [telefonoCliente, setTelefonoCliente] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
+  const [paymentMethod, setPaymentMethod] = useState<"pickup" | "stripe">("pickup");
+
   if (!isOpen) return null;
 
   const handleConfirmOrder = async () => {
@@ -37,6 +39,27 @@ export default function CartModal({ isOpen, onClose, tenantId, tenantPhone }: Ca
     setErrorMsg("");
 
     try {
+      if (paymentMethod === "stripe") {
+        const response = await fetch("/api/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items,
+            tenantId,
+            customerName: nombreCliente,
+            customerPhone: telefonoCliente,
+          }),
+        });
+
+        const data = await response.json();
+        if (data.url) {
+          window.location.href = data.url; // Redirect to Stripe
+          return;
+        } else {
+          throw new Error(data.error || "Error al crear sesión de pago");
+        }
+      }
+
       const orderData = {
         nombreCliente: nombreCliente.trim(),
         telefonoCliente: telefonoCliente.trim(),
@@ -49,6 +72,7 @@ export default function CartModal({ isOpen, onClose, tenantId, tenantPhone }: Ca
         total: totalPrice,
         createdAt: serverTimestamp(),
         estado: "nuevo", // "nuevo" triggers the green badge in the Admin Dashboard
+        paymentMethod: "pickup",
       };
 
       await addDoc(collection(db, "tenants", tenantId, "orders"), orderData);
@@ -61,8 +85,9 @@ export default function CartModal({ isOpen, onClose, tenantId, tenantPhone }: Ca
         setNombreCliente("");
         setTelefonoCliente("");
       }, 4000);
-    } catch (error) {
-      console.error("Error al guardar el pedido:", error);
+    } catch (error: any) {
+      console.error("Error al procesar el pedido:", error);
+      setErrorMsg(error.message || "Error al procesar el pedido");
       setOrderStatus("error");
     } finally {
       setIsSubmitting(false);
@@ -118,7 +143,7 @@ export default function CartModal({ isOpen, onClose, tenantId, tenantPhone }: Ca
               </div>
               <div>
                 <h3 className="text-2xl font-bold text-white tracking-tight">Transacción Fallida</h3>
-                <p className="text-zinc-400 mt-2">Ocurrió un error al procesar tu orden.</p>
+                <p className="text-zinc-400 mt-2">{errorMsg || "Ocurrió un error al procesar tu orden."}</p>
               </div>
               <button 
                 onClick={() => setOrderStatus("idle")}
@@ -166,6 +191,27 @@ export default function CartModal({ isOpen, onClose, tenantId, tenantPhone }: Ca
                     </div>
                   </div>
                 ))}
+              </div>
+
+              {/* Payment Method Selection */}
+              <div className="space-y-4 bg-[#121214] border border-zinc-800/50 rounded-3xl p-6">
+                <h3 className="text-sm font-bold text-white mb-4 uppercase tracking-wider">Método de Pago</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <button 
+                    onClick={() => setPaymentMethod("pickup")}
+                    className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition-all ${paymentMethod === "pickup" ? "border-green-500 bg-green-500/10 text-white" : "border-zinc-800 bg-black text-zinc-500 hover:border-zinc-700"}`}
+                  >
+                    <Store className="w-6 h-6" />
+                    <span className="text-xs font-bold">Pagar al recoger</span>
+                  </button>
+                  <button 
+                    onClick={() => setPaymentMethod("stripe")}
+                    className={`p-4 rounded-2xl border flex flex-col items-center gap-2 transition-all ${paymentMethod === "stripe" ? "border-blue-500 bg-blue-500/10 text-white" : "border-zinc-800 bg-black text-zinc-500 hover:border-zinc-700"}`}
+                  >
+                    <DollarSign className="w-6 h-6" />
+                    <span className="text-xs font-bold">Tarjeta / Online</span>
+                  </button>
+                </div>
               </div>
 
               {/* Pickup Info Banner */}
@@ -237,14 +283,14 @@ export default function CartModal({ isOpen, onClose, tenantId, tenantPhone }: Ca
         {items.length > 0 && orderStatus === "idle" && (
           <div className="p-6 border-t border-zinc-800/50 bg-[#0A0A0B] space-y-4">
             <div className="flex justify-between items-end mb-2">
-              <span className="text-zinc-400 text-sm font-medium">Total a pagar en local</span>
+              <span className="text-zinc-400 text-sm font-medium">Total a pagar</span>
               <span className="text-3xl font-black text-white tracking-tighter">${totalPrice.toFixed(2)}</span>
             </div>
             
             <button
               onClick={handleConfirmOrder}
               disabled={isSubmitting}
-              className="w-full bg-green-500 hover:bg-green-400 text-black font-black text-lg py-4 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none shadow-[0_0_40px_rgba(34,197,94,0.15)] hover:shadow-[0_0_60px_rgba(34,197,94,0.3)]"
+              className={`w-full font-black text-lg py-4 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none shadow-xl ${paymentMethod === "stripe" ? "bg-blue-600 hover:bg-blue-500 text-white" : "bg-green-500 hover:bg-green-400 text-black"}`}
             >
               {isSubmitting ? (
                 <>
@@ -252,7 +298,7 @@ export default function CartModal({ isOpen, onClose, tenantId, tenantPhone }: Ca
                   Procesando...
                 </>
               ) : (
-                "Confirmar Orden"
+                paymentMethod === "stripe" ? "Pagar con Tarjeta" : "Confirmar Orden"
               )}
             </button>
           </div>

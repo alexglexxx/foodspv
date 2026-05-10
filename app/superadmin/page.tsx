@@ -2,13 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
-import { db } from "@/lib/firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { db, auth } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 
 export default function SuperAdminLoginPage() {
   const router = useRouter();
-  const auth = getAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,6 +15,7 @@ export default function SuperAdminLoginPage() {
 
   async function handleLogin() {
     try {
+      if (!auth || !db) throw new Error("Firebase not initialized");
       setLoading(true);
       console.log("1. Intentando login...");
 
