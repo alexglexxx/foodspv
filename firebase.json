@@ -9,7 +9,7 @@
     "rewrites": [
       {
         "source": "**",
-        "function": "app"
+        "function": "nextApp"
       }
     ]
   },
@@ -17,6 +17,7 @@
     "source": "functions"
   },
   "predeploy": [
-    "npm run build"
+    "npm run build",
+    "cp -r .next functions/"
   ]
 }

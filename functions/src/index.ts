@@ -3,6 +3,7 @@ import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
 import axios from "axios";
+import next from "next";
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -11,17 +12,22 @@ const db = admin.firestore();
 const WHATSAPP_TOKEN = defineSecret("WHATSAPP_TOKEN");
 const WHATSAPP_PHONE_ID = defineSecret("WHATSAPP_PHONE_ID");
 
-// 🚀 1. NEXT.JS SSR (Carga el servidor generado en modo standalone)
-const nextServer = require("./server");
+// 🚀 1. NEXT.JS SSR
+const nextAppInstance = next({
+  dev: false,
+  conf: { distDir: ".next" },
+});
+const handle = nextAppInstance.getRequestHandler();
 
 export const nextApp = onRequest(
   {
     region: "us-central1",
-    memory: "1GiB", // 1GB necesario para que el SSR de Next.js funcione fluido
+    memory: "1GiB",
     minInstances: 1,
   },
-  (req, res) => {
-    return nextServer.handler(req, res);
+  async (req, res) => {
+    await nextAppInstance.prepare();
+    return handle(req, res);
   }
 );
 
