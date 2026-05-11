@@ -1,23 +1,5 @@
 {
-  "hosting": {
-    "public": "public",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "**",
-        "function": "nextApp"
-      }
-    ]
-  },
   "functions": {
     "source": "functions"
-  },
-  "predeploy": [
-    "npm run build",
-    "cp -r .next functions/"
-  ]
+  }
 }
