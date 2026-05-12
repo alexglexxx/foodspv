@@ -11,7 +11,7 @@ import {
   query,
   orderBy,
 } from "firebase/firestore";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import ProtectedRoute from "@/src/components/ProtectedRoute";
 import { 
   ShoppingBag, 
   Clock, 
