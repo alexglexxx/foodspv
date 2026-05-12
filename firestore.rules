@@ -11,7 +11,8 @@ service cloud.firestore {
 
     // Función para verificar si el usuario es Admin del tenant específico
     function isAdminOf(tenantId) {
-      return request.auth != null && 
+      return request.auth != null &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' &&
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.tenantId == tenantId;
     }
 
@@ -19,8 +20,11 @@ service cloud.firestore {
     match /users/{userId} {
       // Solo el Superadmin o el propio usuario pueden ver su perfil
       allow read: if request.auth != null && (request.auth.uid == userId || isSuperAdmin());
-      // Solo el Superadmin puede crear/editar roles
-      allow write: if isSuperAdmin();
+      // Permitir creación al propio usuario autenticado (registro) y permitir actualizar al propio usuario o Superadmin.
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && (request.auth.uid == userId || isSuperAdmin());
+      // Solo el Superadmin puede cambiar roles o borrar usuarios
+      allow delete: if isSuperAdmin();
     }
 
     // --- REGLAS DE TENANTS (Restaurantes) ---
@@ -44,14 +48,20 @@ service cloud.firestore {
 
       // --- SUB-COLECCIÓN: PEDIDOS ---
       match /orders/{orderId} {
-        // Los clientes pueden crear pedidos (write)
-        // No permitimos 'update' ni 'delete' al público
-        allow create: if true;
+        // Clientes autenticados pueden crear pedidos; validar tenantId y userId
+        allow create: if request.auth != null
+                      && request.resource.data.userId == request.auth.uid
+                      && request.resource.data.tenantId == tenantId
+                      && request.resource.data.keys().hasAll(['userId','tenantId','items','totalAmount'])
+                      && request.resource.data.items is list;
         
-        // Solo el Admin del tenant o Superadmin pueden ver y actualizar los pedidos
-        allow read, update: if isSuperAdmin() || isAdminOf(tenantId);
+        // Lectura: Superadmin, Admin del tenant o el propio cliente que creó el pedido
+        allow read: if isSuperAdmin() || isAdminOf(tenantId) || (request.auth != null && request.auth.uid == resource.data.userId);
         
-        // Nadie (excepto quizá Superadmin) debería borrar pedidos por integridad
+        // Actualización: solo Admin del tenant o Superadmin
+        allow update: if isSuperAdmin() || isAdminOf(tenantId);
+        
+        // Borrado: solo Superadmin
         allow delete: if isSuperAdmin();
       }
     }
