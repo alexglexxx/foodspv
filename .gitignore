@@ -14,3 +14,4 @@ node_modules
 functions/.next
 functions/lib
 functions/node_modules
+.env.production
