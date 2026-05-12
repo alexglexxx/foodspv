@@ -20,6 +20,7 @@ export default function CartModal({ isOpen, onClose, tenantId, tenantPhone }: Ca
   const [nombreCliente, setNombreCliente] = useState("");
   const [telefonoCliente, setTelefonoCliente] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const isFormValid = nombreCliente.trim().length > 0 && telefonoCliente.trim().length >= 10;
 
   const [paymentMethod, setPaymentMethod] = useState<"pickup" | "stripe">("pickup");
 
@@ -289,7 +290,7 @@ export default function CartModal({ isOpen, onClose, tenantId, tenantPhone }: Ca
             
             <button
               onClick={handleConfirmOrder}
-              disabled={isSubmitting}
+              disabled={!isFormValid || isSubmitting}
               className={`w-full font-black text-lg py-4 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none shadow-xl ${paymentMethod === "stripe" ? "bg-blue-600 hover:bg-blue-500 text-white" : "bg-green-500 hover:bg-green-400 text-black"}`}
             >
               {isSubmitting ? (
