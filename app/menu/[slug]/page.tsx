@@ -27,6 +27,7 @@ export default function Home() {
   const [telefono, setTelefono] = useState("");
   const [confirmar, setConfirmar] = useState(false);
   const [mensajeExito, setMensajeExito] = useState("");
+  const isFormValid = nombre.trim().length > 0 && telefono.trim().length >= 10;
   
 
   useEffect(() => {
@@ -84,6 +85,10 @@ export default function Home() {
   async function enviarPedido() {
     if (!carrito.length) {
       alert("Agrega productos");
+      return;
+    }
+    if (!nombre.trim() || !telefono.trim() || telefono.trim().length < 10) {
+      alert("Ingresa nombre y teléfono válidos");
       return;
     }
     setLoading(true);
@@ -196,14 +201,9 @@ export default function Home() {
               className="border p-2 mb-3 w-full"
             />
             <button
-              onClick={() => {
-                if (!nombre || !telefono) {
-                  alert("Ingresa nombre y teléfono");
-                  return;
-                }
-                setConfirmar(true);
-              }}
-              className="bg-blue-500 text-white px-4 py-2 rounded font-bold w-full"
+              onClick={() => setConfirmar(true)}
+              disabled={!isFormValid}
+              className={`bg-blue-500 text-white px-4 py-2 rounded font-bold w-full ${!isFormValid ? 'opacity-50 pointer-events-none' : ''}`}
             >
               Continuar
             </button>
@@ -228,7 +228,8 @@ export default function Home() {
             </div>
             <button
               onClick={enviarPedido}
-              className="bg-green-600 text-white px-5 py-3 rounded font-bold w-full"
+              disabled={!isFormValid || loading}
+              className={`bg-green-600 text-white px-5 py-3 rounded font-bold w-full ${(!isFormValid || loading) ? 'opacity-50 pointer-events-none' : ''}`}
             >
               Confirmar y Enviar 🚀
             </button>
