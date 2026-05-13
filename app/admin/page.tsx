@@ -80,7 +80,67 @@ export default function AdminDashboard() {
           );
 
           const unsub = onSnapshot(q, (snap) => {
-            const lista = snap.docs.map(d => ({ id: d.id, ...d.data() })) as Pedido[];
+            const lista = snap.docs.map(d => {
+              const data = d.data() as any;
+
+              const items = (data.items || []).map((it: any) => {
+                const name = it.name || it.nombre || "Item";
+                const unitPrice = it.unitPrice ?? it.precio ?? 0;
+                const quantity = it.quantity ?? it.cantidad ?? 1;
+                const subtotal = it.subtotal ?? Number((unitPrice * quantity).toFixed(2));
+                return {
+                  id: it.id || it.id,
+                  name,
+                  nombre: name,
+                  unitPrice,
+                  precio: unitPrice,
+                  quantity,
+                  cantidad: quantity,
+                  subtotal,
+                };
+              });
+
+              const rawStatus = data.status || data.estado || 'new';
+
+              const mapToSpanish = (s: string) => {
+                if (s === 'new' || s === 'nuevo') return 'nuevo';
+                if (s === 'in_process' || s === 'en proceso' || s === 'en_proceso') return 'en proceso';
+                if (s === 'delivered' || s === 'entregado') return 'entregado';
+                if (s === 'cancelled' || s === 'cancelado') return 'cancelado';
+                return String(s);
+              };
+
+              const mapToEnglish = (s: string) => {
+                if (s === 'nuevo' || s === 'new') return 'new';
+                if (s === 'en proceso' || s === 'en_proceso' || s === 'in_process') return 'in_process';
+                if (s === 'entregado' || s === 'delivered') return 'delivered';
+                if (s === 'cancelado' || s === 'cancelled') return 'cancelled';
+                return String(s);
+              };
+
+              const statusEnglish = mapToEnglish(rawStatus);
+              const statusSpanish = mapToSpanish(rawStatus);
+
+              const customerName = data.customerName || data.nombreCliente || '';
+              const customerPhone = data.customerPhone || data.telefonoCliente || '';
+
+              const total = data.total ?? items.reduce((acc: number, it: any) => acc + (it.subtotal ?? 0), 0);
+
+              return {
+                id: d.id,
+                items,
+                total,
+                status: statusEnglish,
+                estado: statusSpanish,
+                customerName,
+                nombreCliente: customerName,
+                customerPhone,
+                telefonoCliente: customerPhone,
+                paymentMethod: data.paymentMethod,
+                source: data.source,
+                createdAt: data.createdAt ?? null,
+              } as Pedido;
+            });
             setPedidos(lista);
             setLoading(false);
           });
@@ -100,8 +160,27 @@ export default function AdminDashboard() {
   async function actualizarEstado(id: string, nuevoEstado: string) {
     if (!tenantId) return;
     try {
+      const mapToSpanish = (s: string) => {
+        if (s === 'new' || s === 'nuevo') return 'nuevo';
+        if (s === 'in_process' || s === 'en proceso' || s === 'en_proceso') return 'en proceso';
+        if (s === 'delivered' || s === 'entregado') return 'entregado';
+        if (s === 'cancelled' || s === 'cancelado') return 'cancelado';
+        return String(s);
+      };
+      const mapToEnglish = (s: string) => {
+        if (s === 'nuevo' || s === 'new') return 'new';
+        if (s === 'en proceso' || s === 'en_proceso' || s === 'in_process') return 'in_process';
+        if (s === 'entregado' || s === 'delivered') return 'delivered';
+        if (s === 'cancelado' || s === 'cancelled') return 'cancelled';
+        return String(s);
+      };
+
+      const statusEng = mapToEnglish(nuevoEstado);
+      const statusSpa = mapToSpanish(nuevoEstado);
+
       await updateDoc(doc(db, "tenants", tenantId, "orders", id), {
-        estado: nuevoEstado
+        status: statusEng,
+        estado: statusSpa
       });
     } catch (e) {
       console.error(e);

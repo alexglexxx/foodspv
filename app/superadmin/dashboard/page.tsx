@@ -138,6 +138,7 @@ export default function SuperAdminDashboard() {
 
   async function deleteProduct(id: string) {
     if (!db) return;
+    if (!selectedTenant) return;
     if (confirm("¿Borrar producto?")) {
       await deleteDoc(doc(db, "tenants", selectedTenant.id, "menu", id));
     }
@@ -296,7 +297,7 @@ export default function SuperAdminDashboard() {
                 <select 
                   className="bg-zinc-900 border border-zinc-800 p-3 rounded-xl outline-none"
                   value={selectedTenant?.id || ""}
-                  onChange={(e) => setSelectedTenant(tenants.find(t => t.id === e.target.value))}
+                  onChange={(e) => setSelectedTenant(tenants.find(t => t.id === e.target.value) ?? null)}
                 >
                   <option value="">Selecciona un restaurante...</option>
                   {tenants.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}

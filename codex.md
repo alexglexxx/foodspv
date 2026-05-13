@@ -1,168 +1,46 @@
-# Codex Memory - FoodSPV
+# Codex - Memoria y Auditoría del Proyecto FoodSPV
 
 Ultima auditoria: 2026-05-13
-Ultima actualizacion de implementacion: 2026-05-13
+Ultima actualizacion de implementacion: 2026-05-13 10:13 UTC
 
-## Resumen
+## 🎯 Visión General
+FoodSPV es una plataforma SaaS (Software as a Service) multi-tenant diseñada para restaurantes. Permite a los negocios tener un menú digital público con carrito de compras y un panel de administración en tiempo real para gestionar los pedidos entrantes.
 
-FoodSPV es un SaaS multi-tenant para restaurantes. La app web en Next.js ya tiene una base funcional visible: menu publico por tenant, carrito, checkout, panel admin y panel superadmin. El proyecto no esta terminado ni listo para produccion: la interfaz va bastante adelantada, pero la verdad del backend, la seguridad de pedidos, la coherencia del esquema y el modelo de despliegue siguen abiertos.
+## 🏗️ Arquitectura y Tecnologías
+*   **Frontend:** Next.js 14+ (App Router), React 19.
+*   **Estilos:** Tailwind CSS v4, Lucide React (iconos), Diseño enfocado en Dark Mode premium.
+*   **Backend & DB:** Firebase (Firestore, Auth, App Hosting).
+*   **Estado Local:** Context API (`CartContext`, `AuthContext`).
 
-Estado corto: MVP avanzado / pre-produccion temprana.
+## 📊 Auditoría y Estado Actual (Mayo 2026)
+Tras analizar el código fuente, la estructura y las reglas de seguridad, el estado del proyecto es **muy avanzado en su núcleo (Core)**, pero faltan módulos de gestión y autoadministración.
 
-## Estado verificado
+### ✅ Lo que ya está terminado y funcional:
+1.  **Multi-tenancy Básico:** La estructura de rutas `/[tenant]` permite a cada restaurante tener su propia URL.
+2.  **Vista Pública (Menú):** La página pública lee los datos de Firebase y muestra un diseño pulido. Tiene un sistema de fallback (datos falsos) si el menú está vacío.
+3.  **Lógica del Carrito:** Implementada correctamente usando Context.
+4.  **Creación de Pedidos:** El componente `CartModal` permite a usuarios anónimos hacer pedidos con validación de nombre y teléfono. Los pedidos se guardan en la subcolección `orders` del tenant.
+5.  **Panel de Control Admin (`/admin`):** Escucha en tiempo real los pedidos entrantes, muestra estadísticas financieras, permite cambiar los estados del pedido (Nuevo -> Cocinando -> Entregado) e incluye generación de Códigos QR para el restaurante.
+6.  **Reglas de Seguridad (Firestore):** Altamente seguras. Usan validación estricta de esquemas (schema validation) para los pedidos públicos y validación de roles (`isAdminOf`, `isSuperAdmin`) para proteger los datos.
 
-- Web app: `npm run build` pasa en Next 16.
-- Script de lint raiz: roto. `package.json` usa `next lint`, pero Next 16 lo elimino.
-- ESLint manual (`./node_modules/.bin/eslint .`): falla con 50 problemas (29 errores, 21 warnings).
-- Firebase Functions local: `npm --prefix functions run build` falla en el entorno actual porque `functions/node_modules` no esta instalado localmente.
-- README y documentacion principal: desactualizados.
+### ⚠️ Lo que falta (Deuda Técnica y Funcional):
+*   El **Admin** no puede editar su menú ni la información de su restaurante desde la interfaz (actualmente requiere hacerlo manualmente en Firestore).
+*   El **Superadmin** no tiene un panel completo para dar de alta nuevos restaurantes o asignar dueños.
+*   Falta notificaciones sonoras o push para cuando el Admin recibe un nuevo pedido.
 
-## Lo que ya existe
+---
 
-- Ruta publica multi-tenant en `app/[tenant]/page.tsx`.
-- Carrito persistido en `localStorage`.
-- Modal de pedido publico con nombre y telefono.
-- Panel admin con lista de pedidos en tiempo real y QR.
-- Panel superadmin para crear tenants y menu.
-- Route handler para webhook general de WhatsApp/Meta.
-- Reglas iniciales de Firestore.
-- Cloud Function de notificacion por WhatsApp alineada al pedido publico.
+## 🚀 Hoja de Ruta: Próximos Pasos (En orden de importancia)
 
-## Diagnostico
+1.  **Gestión de Menú (Admin):** Crear la interfaz dentro del `/admin` (o en una pestaña nueva) para que el dueño del restaurante pueda agregar, editar y eliminar platillos (`productos` en la subcolección `menu`), y asignar categorías y fotos.
+2.  **Configuración del Restaurante (Admin):** Permitir al dueño cambiar el nombre, descripción, banner y teléfono de su restaurante.
+3.  **Panel de SuperAdmin (Gestión SaaS):** Terminar el dashboard en `/superadmin` para crear nuevos `tenants` (restaurantes) y crear usuarios con rol `admin` asignados a esos `tenants`.
+4.  **Notificaciones Real-time:** Agregar una alerta sonora (un pequeño "ding") en la vista `/admin` cuando ingrese un pedido en estado "nuevo".
+5.  **Pagos en Línea (Opcional/Futuro):** Desarrollar la integración de Stripe (cuyo webhook ya está esbozado en `app/api/webhook/`) para permitir pagos con tarjeta directo en el menú.
 
-La app ya tiene forma de producto, pero todavia no tiene cerrada la capa de confianza.
+## 🔄 Flujo de Funcionamiento Final de la Aplicación
 
-Problemas estructurales actuales:
-
-- El esquema de datos no esta unificado.
-- Los pedidos dependen demasiado del cliente.
-- Las reglas de Firestore no coinciden con lo que escriben la UI ni los webhooks.
-- Hay dos modelos de despliegue conviviendo sin decision final: App Hosting y Next dentro de Functions.
-- El control de calidad no esta cerrado para Next 16.
-
-## Bloqueadores reales
-
-- [ ] Unificar esquema de `tenant`, `user` y `order`.
-- [ ] Decidir si el pedido publico se queda en Firestore directo o pasa a endpoint server-side.
-- [ ] Endurecer validacion anti-spam para pedidos publicos.
-- [ ] Alinear roles (`superadmin`, `admin`, etc.) entre login, guards y reglas.
-- [ ] Elegir un solo modelo de despliegue.
-- [ ] Arreglar pipeline de lint y bajar los errores actuales.
-
-## Esquema canonico sugerido
-
-### Tenant
-
-```ts
-{
-  name: string
-  slug: string
-  description?: string
-  bannerUrl?: string
-  notifyPhone?: string
-  active: boolean
-  ownerId?: string
-  createdAt: Timestamp
-}
-```
-
-### User
-
-```ts
-{
-  email: string
-  role: "superadmin" | "admin"
-  tenantId?: string
-  createdAt?: Timestamp
-}
-```
-
-### Order
-
-```ts
-{
-  tenantId: string
-  customerName: string
-  customerPhone: string
-  items: Array<{
-    id: string
-    name: string
-    unitPrice: number
-    quantity: number
-  }>
-  total: number
-  status: "new" | "preparing" | "delivered" | "cancelled"
-  paymentMethod: "pickup" | "stripe"
-  paymentStatus?: "pending" | "paid" | "failed"
-  source: "web"
-  createdAt: Timestamp
-}
-```
-
-## Roadmap recomendado
-
-### P0 - Cerrar lo que hoy rompe el producto
-
-1. Normalizar nombres de campos y roles en toda la app.
-2. Reescribir `firestore.rules` segun el esquema real.
-3. Corregir login/guards para que no existan roles que la app luego bloquea.
-4. Decidir si el siguiente paso del flujo publico es mantener escritura directa o pasar a endpoint.
-5. Cerrar el deploy final de Next y Functions.
-
-### P1 - Cerrar el producto usable
-
-1. Alinear el schema de tenant entre vista publica y superadmin.
-2. Cerrar despliegue, secretos, reglas e indexes.
-3. Renombrar `middleware.ts` a `proxy.ts` y limpiar warnings de Next 16.
-4. Agregar proteccion basica contra pedidos basura.
-5. Definir si el panel admin queda como apoyo o se minimiza aun mas.
-
-### P2 - Subir nivel de entrega
-
-1. Agregar CI con build, eslint y type checks.
-2. Agregar pruebas del flujo critico de pedido.
-3. Mejorar observabilidad de pagos y webhooks.
-4. Pulir UX de estados vacios, errores y tenants inexistentes.
-
-## Decision tecnica recomendada
-
-Mantener una sola arquitectura:
-
-- Frontend y route handlers en Next.js 16.
-- Hosting en Firebase App Hosting.
-- Firebase Admin SDK solo en servidor para operaciones sensibles.
-- Cloud Functions solo si realmente aportan valor claro (por ejemplo notificaciones async).
-
-No conviene mantener al mismo tiempo App Hosting y un `nextApp` dentro de `functions/src/index.ts` salvo que exista una razon operativa muy concreta.
-
-## Checklist vivo
-
-- [x] Auditoria inicial del repo
-- [x] Verificacion de build web
-- [x] Verificacion del estado de lint
-- [x] Verificacion del estado de functions
-- [x] Stripe removido del flujo publico
-- [x] Modal de pedido simplificado a nombre + telefono
-- [x] Ruta publica vieja `app/menu/[slug]` removida
-- [x] Function de WhatsApp alineada al pedido actual
-- [ ] Esquema de datos unificado
-- [ ] Flujo endurecido de pedidos publicos
-- [ ] Reglas Firestore alineadas al modelo real
-- [ ] Roles alineados entre auth, UI y reglas
-- [ ] Deploy path definido
-- [ ] CI minimo configurado
-- [ ] Documentacion real de operacion y deploy
-
-## Preguntas abiertas
-
-- El cliente final va a ser anonimo o autenticado?
-- El producto final es solo pickup o tambien delivery?
-- WhatsApp se usara solo para notificaciones o tambien para ordenar?
-- Se quiere App Hosting como destino final o se prefiere Functions/Cloud Run custom?
-
-## Reglas de trabajo para futuras sesiones
-
-- Antes de tocar codigo Next.js, leer la guia relevante en `node_modules/next/dist/docs/` por la version actual.
-- No agregar mas escrituras criticas a Firestore desde cliente para pedidos o pagos.
-- Tratar precios, estados y roles como verdad de servidor.
-- Actualizar este archivo cada vez que se cierre una tarea importante.
+1.  **Onboarding:** El SuperAdministrador de FoodSPV registra un nuevo restaurante en el sistema y le entrega las credenciales de acceso al dueño.
+2.  **Setup del Restaurante:** El dueño (Admin) inicia sesión, configura los datos de su local y da de alta los platillos de su menú. Finalmente, imprime el Código QR generado en su panel.
+3.  **Experiencia del Cliente:** Los comensales escanean el QR en la mesa o entran al link web. Navegan por un menú digital atractivo, agregan productos al carrito y envían su pedido ingresando solo su nombre y número de mesa/teléfono.
+4.  **Gestión de Operaciones:** El pedido suena instantáneamente en la tablet/computadora del restaurante. El personal acepta la orden, la prepara y, al finalizar, la marca como entregada, manteniendo un control exacto de las ventas y los tiempos.

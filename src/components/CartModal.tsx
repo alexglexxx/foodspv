@@ -3,8 +3,6 @@
 import React, { useState } from "react";
 import { useCart } from "@/context/CartContext";
 import { X, Minus, Plus, ShoppingBag, Loader2, CheckCircle2, AlertCircle, Phone } from "lucide-react";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 
 type CartModalProps = {
   isOpen: boolean;
@@ -39,23 +37,33 @@ export default function CartModal({ isOpen, onClose, tenantId }: CartModalProps)
     try {
       const orderData = {
         tenantId,
-        nombreCliente: nombreCliente.trim(),
-        telefonoCliente: telefonoCliente.trim(),
+        customerName: nombreCliente.trim(),
+        customerPhone: telefonoCliente.trim(),
         items: items.map(i => ({
           id: i.id,
-          nombre: i.nombre,
-          precio: i.precio,
-          cantidad: i.cantidad,
+          name: i.nombre,
+          unitPrice: i.precio,
+          quantity: i.cantidad,
           subtotal: Number((i.precio * i.cantidad).toFixed(2)),
         })),
         total: Number(totalPrice.toFixed(2)),
-        createdAt: serverTimestamp(),
-        estado: "nuevo",
+        // createdAt will be set server-side
+        status: "new",
         paymentMethod: "pickup",
         source: "public_menu",
       };
 
-      await addDoc(collection(db, "tenants", tenantId, "orders"), orderData);
+      // Send order to server for validation and persistence
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || 'Server validation failed');
+      }
       
       setOrderStatus("success");
       clearCart();
