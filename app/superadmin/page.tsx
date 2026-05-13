@@ -29,7 +29,7 @@ export default function SuperAdminLoginPage() {
         return;
       }
       router.push("/superadmin/dashboard");
-    } catch (err) {
+    } catch {
       setError("Credenciales inválidas o falta de permisos.");
       setLoading(false);
     }

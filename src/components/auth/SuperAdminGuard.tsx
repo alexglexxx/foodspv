@@ -14,13 +14,13 @@ interface Props {
 
 export default function SuperAdminGuard({ children }: Props) {
   const router = useRouter();
+  const isFirebaseReady = Boolean(auth && db);
 
   const [authorized, setAuthorized] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(isFirebaseReady);
 
   useEffect(() => {
-    if (!auth || !db) {
-      setLoading(false);
+    if (!isFirebaseReady || !auth || !db) {
       return;
     }
 
@@ -56,7 +56,7 @@ export default function SuperAdminGuard({ children }: Props) {
     });
 
     return () => unsubscribe();
-  }, [router]);
+  }, [isFirebaseReady, router]);
 
   if (loading) {
     return (

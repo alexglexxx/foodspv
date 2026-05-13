@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { db, auth } from "@/lib/firebase";
 import {
@@ -7,46 +8,80 @@ import {
   getDocs,
   addDoc,
   doc,
-  getDoc,
   updateDoc,
   deleteDoc,
   onSnapshot,
-  query,
 } from "firebase/firestore";
 import ProtectedRoute from "@/src/components/ProtectedRoute";
 import { 
   LayoutDashboard, 
   Store, 
   Utensils, 
-  Settings, 
   Plus, 
   Trash2, 
-  Edit3, 
   ChevronRight,
-  TrendingUp,
   BarChart3,
-  Search,
   CheckCircle2,
   XCircle
 } from "lucide-react";
 
+type Tenant = {
+  id: string;
+  name: string;
+  notifyPhone: string;
+  active: boolean;
+};
+
+type Product = {
+  id: string;
+  nombre: string;
+  precio: number;
+  descripcion?: string;
+  categoria?: string;
+  imagenUrl?: string;
+};
+
+type AnalyticsItem = {
+  name: string;
+  orders: number;
+};
+
 export default function SuperAdminDashboard() {
   const [activeTab, setActiveTab] = useState("tenants");
-  const [tenants, setTenants] = useState<any[]>([]);
-  const [selectedTenant, setSelectedTenant] = useState<any>(null);
-  const [products, setProducts] = useState<any[]>([]);
-  const [analytics, setAnalytics] = useState<any[]>([]);
+  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [analytics, setAnalytics] = useState<AnalyticsItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Forms state
   const [newTenant, setNewTenant] = useState({ name: "", notifyPhone: "", active: true });
   const [newProduct, setNewProduct] = useState({ nombre: "", precio: 0, descripcion: "", categoria: "Populares", imagenUrl: "" });
 
+  async function calculateAnalytics(tenantList: Tenant[]) {
+    if (!db) return;
+
+    const data = await Promise.all(
+      tenantList.map(async (tenant) => {
+        const ordersSnap = await getDocs(collection(db, "tenants", tenant.id, "orders"));
+        return {
+          name: tenant.name,
+          orders: ordersSnap.size,
+        };
+      })
+    );
+
+    setAnalytics(data.sort((a, b) => b.orders - a.orders));
+  }
+
   useEffect(() => {
     if (!db) return;
 
     const unsubTenants = onSnapshot(collection(db, "tenants"), (snap) => {
-      const lista = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const lista = snap.docs.map((tenantDoc) => ({
+        id: tenantDoc.id,
+        ...(tenantDoc.data() as Omit<Tenant, "id">),
+      }));
       setTenants(lista);
       calculateAnalytics(lista);
       setLoading(false);
@@ -58,23 +93,16 @@ export default function SuperAdminDashboard() {
   useEffect(() => {
     if (selectedTenant && db) {
       const unsubProducts = onSnapshot(collection(db, "tenants", selectedTenant.id, "menu"), (snap) => {
-        setProducts(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        setProducts(
+          snap.docs.map((productDoc) => ({
+            id: productDoc.id,
+            ...(productDoc.data() as Omit<Product, "id">),
+          }))
+        );
       });
       return () => unsubProducts();
     }
   }, [selectedTenant]);
-
-  async function calculateAnalytics(tenantList: any[]) {
-    if (!db) return;
-    const data = await Promise.all(tenantList.map(async (t) => {
-      const ordersSnap = await getDocs(collection(db, "tenants", t.id, "orders"));
-      return {
-        name: t.name,
-        orders: ordersSnap.size,
-      };
-    }));
-    setAnalytics(data.sort((a, b) => b.orders - a.orders));
-  }
 
   async function handleCreateTenant() {
     if (!db || !newTenant.name || !newTenant.notifyPhone) return alert("Completa los campos");
@@ -85,8 +113,8 @@ export default function SuperAdminDashboard() {
         ownerId: auth?.currentUser?.uid
       });
       setNewTenant({ name: "", notifyPhone: "", active: true });
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
     }
   }
 
@@ -98,8 +126,8 @@ export default function SuperAdminDashboard() {
         precio: Number(newProduct.precio)
       });
       setNewProduct({ nombre: "", precio: 0, descripcion: "", categoria: "Populares", imagenUrl: "" });
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
     }
   }
 
@@ -113,6 +141,16 @@ export default function SuperAdminDashboard() {
     if (confirm("¿Borrar producto?")) {
       await deleteDoc(doc(db, "tenants", selectedTenant.id, "menu", id));
     }
+  }
+
+  if (loading) {
+    return (
+      <ProtectedRoute allowedRole="superadmin">
+        <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+          <div className="w-10 h-10 border-4 border-zinc-800 border-t-green-500 rounded-full animate-spin"></div>
+        </div>
+      </ProtectedRoute>
+    );
   }
 
   return (
@@ -317,10 +355,20 @@ export default function SuperAdminDashboard() {
 
                   {/* Lista Productos */}
                   <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {products.map(p => (
+                  {products.map(p => (
                       <div key={p.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex gap-4 group">
                         <div className="w-20 h-20 bg-zinc-800 rounded-xl shrink-0 overflow-hidden">
-                          {p.imagenUrl ? <img src={p.imagenUrl} className="w-full h-full object-cover" /> : <Utensils className="w-6 h-6 text-zinc-700 m-7" />}
+                          {p.imagenUrl ? (
+                            <Image
+                              src={p.imagenUrl}
+                              alt={p.nombre}
+                              width={80}
+                              height={80}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <Utensils className="w-6 h-6 text-zinc-700 m-7" />
+                          )}
                         </div>
                         <div className="flex-1">
                           <div className="flex justify-between items-start">

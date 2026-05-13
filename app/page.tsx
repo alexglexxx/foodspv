@@ -12,7 +12,7 @@ export default function HomePage() {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
-            href="/menu/demo"
+            href="/demo"
             className="bg-green-500 hover:bg-green-600 px-6 py-3 rounded-lg font-semibold"
           >
             Ver menú demo

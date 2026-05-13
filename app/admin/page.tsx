@@ -13,12 +13,8 @@ import {
 } from "firebase/firestore";
 import ProtectedRoute from "@/src/components/ProtectedRoute";
 import { 
-  ShoppingBag, 
   Clock, 
   CheckCircle2, 
-  ChevronRight, 
-  Bell, 
-  History,
   Timer,
   DollarSign,
   Package,
@@ -31,12 +27,22 @@ import { QRCodeSVG } from "qrcode.react";
 
 type Pedido = {
   id: string;
-  items: any[];
+  items: Array<{
+    id: string;
+    nombre: string;
+    precio: number;
+    cantidad: number;
+    subtotal?: number;
+  }>;
   total: number;
   estado: "nuevo" | "en proceso" | "entregado" | "cancelado";
   nombreCliente?: string;
   telefonoCliente?: string;
-  createdAt: any;
+  paymentMethod?: "pickup";
+  source?: "public_menu";
+  createdAt: {
+    toDate?: () => Date;
+  } | null;
 };
 
 export default function AdminDashboard() {
@@ -185,7 +191,7 @@ export default function AdminDashboard() {
             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
               <DollarSign className="w-16 h-16" />
             </div>
-            <p className="text-zinc-500 text-sm font-medium">Ventas Completadas</p>
+            <p className="text-zinc-500 text-sm font-medium">Total Entregado</p>
             <p className="text-4xl font-bold mt-1">${stats.totalHoy.toFixed(2)}</p>
           </div>
           <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-3xl relative overflow-hidden group border-l-4 border-l-orange-500">

@@ -48,15 +48,36 @@ service cloud.firestore {
 
       // --- SUB-COLECCIÓN: PEDIDOS ---
       match /orders/{orderId} {
-        // Clientes autenticados pueden crear pedidos; validar tenantId y userId
-        allow create: if request.auth != null
-                      && request.resource.data.userId == request.auth.uid
+        // El pedido público se crea sin login, con validaciones estrictas de forma
+        allow create: if request.resource.data.keys().hasOnly([
+                          'tenantId',
+                          'nombreCliente',
+                          'telefonoCliente',
+                          'items',
+                          'total',
+                          'createdAt',
+                          'estado',
+                          'paymentMethod',
+                          'source'
+                        ])
                       && request.resource.data.tenantId == tenantId
-                      && request.resource.data.keys().hasAll(['userId','tenantId','items','totalAmount'])
-                      && request.resource.data.items is list;
-        
-        // Lectura: Superadmin, Admin del tenant o el propio cliente que creó el pedido
-        allow read: if isSuperAdmin() || isAdminOf(tenantId) || (request.auth != null && request.auth.uid == resource.data.userId);
+                      && request.resource.data.nombreCliente is string
+                      && request.resource.data.nombreCliente.size() >= 2
+                      && request.resource.data.nombreCliente.size() <= 80
+                      && request.resource.data.telefonoCliente is string
+                      && request.resource.data.telefonoCliente.size() >= 10
+                      && request.resource.data.telefonoCliente.size() <= 15
+                      && request.resource.data.items is list
+                      && request.resource.data.items.size() > 0
+                      && request.resource.data.items.size() <= 30
+                      && request.resource.data.total is number
+                      && request.resource.data.total > 0
+                      && request.resource.data.estado == 'nuevo'
+                      && request.resource.data.paymentMethod == 'pickup'
+                      && request.resource.data.source == 'public_menu';
+
+        // Lectura: solo Superadmin o Admin del tenant
+        allow read: if isSuperAdmin() || isAdminOf(tenantId);
         
         // Actualización: solo Admin del tenant o Superadmin
         allow update: if isSuperAdmin() || isAdminOf(tenantId);

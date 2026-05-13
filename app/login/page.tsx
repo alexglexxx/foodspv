@@ -42,7 +42,6 @@ export default function LoginPage() {
 
       const data = userDoc.data();
       const role = data.role;
-      const tenantId = data.tenantId;
 
       switch (role) {
         case "superadmin":
@@ -55,7 +54,7 @@ export default function LoginPage() {
         default:
           setError("Rol de usuario inválido o sin permisos.");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       setError("Credenciales incorrectas o error de conexión.");
     }

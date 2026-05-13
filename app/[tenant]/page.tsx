@@ -17,10 +17,11 @@ type MenuItem = {
 };
 
 type TenantInfo = {
-  nombre: string;
-  descripcion: string;
+  name: string;
+  description: string;
   bannerUrl?: string;
-  telefono?: string;
+  notifyPhone?: string;
+  active?: boolean;
 };
 
 export default function TenantMenuPage({
@@ -38,21 +39,29 @@ export default function TenantMenuPage({
   useEffect(() => {
     async function fetchData() {
       try {
-        // 1. Intentar obtener info real del restaurante
         const tenantDoc = await getDoc(doc(db, "tenants", tenant));
-        if (tenantDoc.exists() && tenantDoc.data().nombre) {
-          setInfo(tenantDoc.data() as TenantInfo);
-        } else {
-          // Datos de prueba (Fallback visual)
+        if (tenantDoc.exists()) {
+          const tenantData = tenantDoc.data();
           setInfo({
-            nombre: tenant.charAt(0).toUpperCase() + tenant.slice(1),
-            descripcion: "Descubre los mejores sabores locales entregados directamente a tu puerta.",
+            name: tenantData.name || tenantData.nombre || tenant.charAt(0).toUpperCase() + tenant.slice(1),
+            description:
+              tenantData.description ||
+              tenantData.descripcion ||
+              "Descubre los mejores sabores locales entregados directamente a tu puerta.",
+            bannerUrl: tenantData.bannerUrl,
+            notifyPhone: tenantData.notifyPhone || tenantData.telefono,
+            active: tenantData.active,
+          });
+        } else {
+          setInfo({
+            name: tenant.charAt(0).toUpperCase() + tenant.slice(1),
+            description: "Descubre los mejores sabores locales entregados directamente a tu puerta.",
             bannerUrl: "https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=2000&auto=format&fit=crop",
-            telefono: "521234567890", // Ejemplo: 52 + número (México)
+            notifyPhone: "521234567890",
+            active: true,
           });
         }
 
-        // 2. Intentar obtener el menú real
         const menuSnap = await getDocs(collection(db, "tenants", tenant, "menu"));
         if (!menuSnap.empty) {
           const items = menuSnap.docs.map((d) => ({
@@ -106,10 +115,10 @@ export default function TenantMenuPage({
       <div className="max-w-5xl mx-auto px-4 sm:px-6 relative -mt-24">
         <div className="bg-zinc-900/90 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-6 shadow-2xl">
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-3 text-white">
-            {info?.nombre}
+            {info?.name}
           </h1>
           <p className="text-zinc-400 text-sm md:text-base mb-5 max-w-2xl leading-relaxed">
-            {info?.descripcion}
+            {info?.description}
           </p>
 
           <div className="flex flex-wrap items-center gap-3 text-sm font-medium">
@@ -211,7 +220,6 @@ export default function TenantMenuPage({
         isOpen={isCartOpen} 
         onClose={() => setIsCartOpen(false)} 
         tenantId={tenant}
-        tenantPhone={info?.telefono}
       />
     </main>
   );

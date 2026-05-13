@@ -1,9 +1,7 @@
-import { onRequest } from "firebase-functions/v2/https";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { defineSecret } from "firebase-functions/params";
 import * as admin from "firebase-admin";
 import axios from "axios";
-import next from "next";
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -12,26 +10,7 @@ const db = admin.firestore();
 const WHATSAPP_TOKEN = defineSecret("WHATSAPP_TOKEN");
 const WHATSAPP_PHONE_ID = defineSecret("WHATSAPP_PHONE_ID");
 
-// 🚀 1. NEXT.JS SSR
-const nextAppInstance = next({
-  dev: false,
-  conf: { distDir: ".next" },
-});
-const handle = nextAppInstance.getRequestHandler();
-
-export const nextApp = onRequest(
-  {
-    region: "us-central1",
-    memory: "1GiB",
-    minInstances: 1,
-  },
-  async (req, res) => {
-    await nextAppInstance.prepare();
-    return handle(req, res);
-  }
-);
-
-// 📩 2. NOTIFICACIÓN WHATSAPP (Gen2)
+// 📩 NOTIFICACIÓN WHATSAPP (Gen2)
 export const notifyOrder = onDocumentCreated(
   {
     document: "tenants/{tenantId}/orders/{orderId}",
@@ -52,6 +31,7 @@ export const notifyOrder = onDocumentCreated(
       const tenantDoc = await db.doc(`tenants/${tenantId}`).get();
       const tenantData = tenantDoc.data();
       const notifyPhone = tenantData?.notifyPhone;
+      const tenantName = tenantData?.name || "Tu negocio";
 
       if (!notifyPhone) {
         console.log(`[INFO] Tenant ${tenantId} sin teléfono`);
@@ -59,20 +39,24 @@ export const notifyOrder = onDocumentCreated(
       }
 
       const items = pedido.items
-        .map((i: any) => `• ${i.cantidad}x ${i.nombre} ($${(i.precio * i.cantidad).toFixed(2)})`)
+        .map((i: { cantidad: number; nombre: string; subtotal?: number; precio: number }) => {
+          const subtotal = i.subtotal ?? i.precio * i.cantidad;
+          return `• ${i.cantidad} x ${i.nombre} - $${subtotal.toFixed(2)}`;
+        })
         .join("\n");
 
-      const mensaje = `🍔 *NUEVO PEDIDO* 🍔
---------------------------
-👤 *Cliente:* ${pedido.cliente?.nombre || "N/A"}
-📞 *Teléfono:* ${pedido.cliente?.telefono || "N/A"}
---------------------------
-📝 *Detalle:*
+      const mensaje = `*NUEVO PEDIDO - FOODSPV*
+
+Negocio: ${tenantName}
+Cliente: ${pedido.nombreCliente || "N/A"}
+Telefono: ${pedido.telefonoCliente || "N/A"}
+
+Detalle:
 ${items}
 
-💰 *TOTAL:* $${pedido.total.toFixed(2)}
---------------------------
-_Enviado desde FoodSPV_`;
+Total: $${pedido.total.toFixed(2)}
+
+Estado: ${pedido.estado || "nuevo"}`;
 
       await axios.post(
         `https://graph.facebook.com/v17.0/${WHATSAPP_PHONE_ID.value()}/messages`,
@@ -91,8 +75,9 @@ _Enviado desde FoodSPV_`;
       );
 
       console.log("[SUCCESS] WhatsApp enviado");
-    } catch (error: any) {
-      console.error("[ERROR] WhatsApp:", error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      console.error("[ERROR] WhatsApp:", message);
     }
   }
 );
