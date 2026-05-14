@@ -2,7 +2,7 @@
 
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import { getAuth, Auth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
@@ -13,16 +13,33 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
 };
 
+// ========================================
+// FIREBASE APP
+// ========================================
+
 const app =
   getApps().length > 0
     ? getApp()
     : initializeApp(firebaseConfig);
 
+// ========================================
+// FIRESTORE
+// ========================================
+
 const db = getFirestore(app);
 
-const auth =
-  typeof window !== "undefined"
-    ? getAuth(app)
-    : null;
+// ========================================
+// SAFE AUTH FOR NEXT SSR
+// ========================================
+
+let auth: Auth | null = null;
+
+if (typeof window !== "undefined") {
+  auth = getAuth(app);
+}
+
+// ========================================
+// EXPORTS
+// ========================================
 
 export { app, db, auth };

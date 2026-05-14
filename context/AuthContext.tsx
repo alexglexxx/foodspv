@@ -7,10 +7,24 @@ import {
   useState,
 } from "react";
 
-import { onAuthStateChanged, User } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import {
+  onAuthStateChanged,
+  User,
+} from "firebase/auth";
 
-import { auth, db } from "@/lib/firebase-client";
+import {
+  doc,
+  getDoc,
+} from "firebase/firestore";
+
+import {
+  auth,
+  db,
+} from "@/lib/firebase-client";
+
+// ========================================
+// TYPES
+// ========================================
 
 type AuthContextType = {
   user: User | null;
@@ -18,57 +32,84 @@ type AuthContextType = {
   loading: boolean;
 };
 
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  role: null,
-  loading: true,
-});
+// ========================================
+// CONTEXT
+// ========================================
+
+const AuthContext =
+  createContext<AuthContextType>({
+    user: null,
+    role: null,
+    loading: true,
+  });
+
+// ========================================
+// PROVIDER
+// ========================================
 
 export function AuthProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [role, setRole] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] =
+    useState<User | null>(null);
+
+  const [role, setRole] =
+    useState<string | null>(null);
+
+  const [loading, setLoading] =
+    useState(true);
 
   useEffect(() => {
-    // Evitar ejecutar Firebase Auth durante SSR/build
+    // ========================================
+    // SSR SAFETY
+    // ========================================
+
     if (!auth) {
       setLoading(false);
       return;
     }
 
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      async (firebaseUser) => {
-        if (!firebaseUser) {
-          setUser(null);
-          setRole(null);
-          setLoading(false);
-          return;
-        }
-
-        setUser(firebaseUser);
-
-        try {
-          const userRef = doc(db, "users", firebaseUser.uid);
-
-          const userSnap = await getDoc(userRef);
-
-          if (userSnap.exists()) {
-            const data = userSnap.data();
-
-            setRole(data.role || null);
+    const unsubscribe =
+      onAuthStateChanged(
+        auth,
+        async (firebaseUser) => {
+          if (!firebaseUser) {
+            setUser(null);
+            setRole(null);
+            setLoading(false);
+            return;
           }
-        } catch (error) {
-          console.error("AUTH CONTEXT ERROR:", error);
-        }
 
-        setLoading(false);
-      }
-    );
+          setUser(firebaseUser);
+
+          try {
+            const userRef = doc(
+              db,
+              "users",
+              firebaseUser.uid
+            );
+
+            const userSnap =
+              await getDoc(userRef);
+
+            if (userSnap.exists()) {
+              const data =
+                userSnap.data();
+
+              setRole(data.role || null);
+            }
+          } catch (error) {
+            console.error(
+              "AUTH CONTEXT ERROR:",
+              error
+            );
+          }
+
+          setLoading(false);
+        }
+      );
 
     return () => unsubscribe();
   }, []);
@@ -85,6 +126,10 @@ export function AuthProvider({
     </AuthContext.Provider>
   );
 }
+
+// ========================================
+// HOOK
+// ========================================
 
 export function useAuth() {
   return useContext(AuthContext);

@@ -1,32 +1,70 @@
-import { NextRequest, NextResponse } from "next/server";
+import {
+  NextRequest,
+  NextResponse,
+} from "next/server";
+
 import { db } from "@/lib/firebase-admin";
 
+// ========================================
+// DYNAMIC
+// ========================================
+
 export const dynamic = "force-dynamic";
+
+// ========================================
+// VERIFY TOKEN
+// ========================================
 
 const VERIFY_TOKEN =
   process.env.WHATSAPP_VERIFY_TOKEN ||
   "foodspv_verify_token";
 
-export async function GET(req: NextRequest) {
-  const searchParams = req.nextUrl.searchParams;
+// ========================================
+// GET
+// ========================================
 
-  const mode = searchParams.get("hub.mode");
-  const token = searchParams.get("hub.verify_token");
-  const challenge = searchParams.get("hub.challenge");
+export async function GET(
+  req: NextRequest
+) {
+  const searchParams =
+    req.nextUrl.searchParams;
 
-  if (mode === "subscribe" && token === VERIFY_TOKEN) {
+  const mode =
+    searchParams.get("hub.mode");
+
+  const token = searchParams.get(
+    "hub.verify_token"
+  );
+
+  const challenge =
+    searchParams.get("hub.challenge");
+
+  if (
+    mode === "subscribe" &&
+    token === VERIFY_TOKEN
+  ) {
     return new NextResponse(challenge, {
       status: 200,
     });
   }
 
   return NextResponse.json(
-    { error: "Invalid verify token" },
-    { status: 403 }
+    {
+      error: "Invalid verify token",
+    },
+    {
+      status: 403,
+    }
   );
 }
 
-export async function POST(req: NextRequest) {
+// ========================================
+// POST
+// ========================================
+
+export async function POST(
+  req: NextRequest
+) {
   try {
     const body = await req.json();
 
@@ -36,12 +74,20 @@ export async function POST(req: NextRequest) {
     );
 
     const entry = body.entry?.[0];
-    const changes = entry?.changes?.[0];
+
+    const changes =
+      entry?.changes?.[0];
+
     const value = changes?.value;
+
     const messages = value?.messages;
+
     const metadata = value?.metadata;
 
-    if (!messages || messages.length === 0) {
+    if (
+      !messages ||
+      messages.length === 0
+    ) {
       return NextResponse.json({
         received: true,
       });
@@ -50,18 +96,29 @@ export async function POST(req: NextRequest) {
     const msg = messages[0];
 
     const phoneNumberId =
-      metadata?.phone_number_id || null;
+      metadata?.phone_number_id ||
+      null;
 
     const from = msg.from || null;
 
     const text =
-      msg.text?.body || "[non-text-message]";
+      msg.text?.body ||
+      "[non-text-message]";
+
+    // ========================================
+    // SAVE
+    // ========================================
 
     await db.collection("messages").add({
-      tenantPhoneNumberId: phoneNumberId,
+      tenantPhoneNumberId:
+        phoneNumberId,
+
       from,
+
       text,
+
       raw: body,
+
       createdAt: new Date(),
     });
 
@@ -71,7 +128,10 @@ export async function POST(req: NextRequest) {
       success: true,
     });
   } catch (error) {
-    console.error("❌ WEBHOOK ERROR:", error);
+    console.error(
+      "❌ WEBHOOK ERROR:",
+      error
+    );
 
     return NextResponse.json(
       {
