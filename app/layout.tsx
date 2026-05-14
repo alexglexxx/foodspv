@@ -1,11 +1,4 @@
 import "./globals.css";
-import { AuthProvider } from "@/context/AuthContext";
-import { CartProvider } from "@/context/CartContext";
-
-export const metadata = {
-  title: "Foodspv",
-  description: "Plataforma de gestión",
-};
 
 export default function RootLayout({
   children,
@@ -14,13 +7,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <body>
-        <AuthProvider>
-          <CartProvider>
-            {children}
-          </CartProvider>
-        </AuthProvider>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
