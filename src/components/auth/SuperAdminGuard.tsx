@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 
-import { db, auth } from "@/lib/firebase";
+import { db, auth } from "@/lib/firebase-client";
 
 interface Props {
   children: ReactNode;

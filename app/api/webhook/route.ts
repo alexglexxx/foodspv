@@ -1,26 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-
-import { db } from "@/lib/firebase";
-
-import {
-  collection,
-  addDoc,
-  serverTimestamp,
-} from "firebase/firestore";
+import { db } from "@/lib/firebase-admin";
 
 export const dynamic = "force-dynamic";
-
-// ========================================
-// VERIFY TOKEN
-// ========================================
 
 const VERIFY_TOKEN =
   process.env.WHATSAPP_VERIFY_TOKEN ||
   "foodspv_verify_token";
-
-// ========================================
-// GET → META VERIFICATION
-// ========================================
 
 export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
@@ -30,26 +15,16 @@ export async function GET(req: NextRequest) {
   const challenge = searchParams.get("hub.challenge");
 
   if (mode === "subscribe" && token === VERIFY_TOKEN) {
-    console.log("✅ WEBHOOK VERIFIED");
-
     return new NextResponse(challenge, {
       status: 200,
     });
   }
 
   return NextResponse.json(
-    {
-      error: "Invalid verify token",
-    },
-    {
-      status: 403,
-    }
+    { error: "Invalid verify token" },
+    { status: 403 }
   );
 }
-
-// ========================================
-// POST → INCOMING EVENTS
-// ========================================
 
 export async function POST(req: NextRequest) {
   try {
@@ -61,13 +36,9 @@ export async function POST(req: NextRequest) {
     );
 
     const entry = body.entry?.[0];
-
     const changes = entry?.changes?.[0];
-
     const value = changes?.value;
-
     const messages = value?.messages;
-
     const metadata = value?.metadata;
 
     if (!messages || messages.length === 0) {
@@ -86,16 +57,12 @@ export async function POST(req: NextRequest) {
     const text =
       msg.text?.body || "[non-text-message]";
 
-    // ========================================
-    // SAVE MESSAGE
-    // ========================================
-
-    await addDoc(collection(db, "messages"), {
+    await db.collection("messages").add({
       tenantPhoneNumberId: phoneNumberId,
       from,
       text,
       raw: body,
-      createdAt: serverTimestamp(),
+      createdAt: new Date(),
     });
 
     console.log("✅ Message saved");

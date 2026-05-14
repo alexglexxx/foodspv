@@ -10,7 +10,7 @@ import {
 import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 
-import { auth, db } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase-client";
 
 type AuthContextType = {
   user: User | null;

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { db, auth } from "@/lib/firebase";
+import { db, auth } from "@/lib/firebase-client";
 import { doc, getDoc } from "firebase/firestore";
 import { ShieldCheck } from "lucide-react";
 

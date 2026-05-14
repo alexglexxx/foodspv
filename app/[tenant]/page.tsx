@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use } from "react";
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db } from "@/lib/firebase-client";
 import { Star, Clock, Info, Plus, ShoppingBag } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import CartModal from "@/src/components/CartModal";
