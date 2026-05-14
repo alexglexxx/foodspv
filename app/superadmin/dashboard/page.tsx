@@ -1,5 +1,6 @@
 "use client";
 
+export const dynamic = "force-dynamic";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { db, auth } from "@/lib/firebase-client";
