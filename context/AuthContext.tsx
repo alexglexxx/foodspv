@@ -34,36 +34,53 @@ export function AuthProvider({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (!firebaseUser) {
-        setUser(null);
-        setRole(null);
-        setLoading(false);
-        return;
-      }
-
-      setUser(firebaseUser);
-
-      try {
-        const userRef = doc(db, "users", firebaseUser.uid);
-        const userSnap = await getDoc(userRef);
-
-        if (userSnap.exists()) {
-          const data = userSnap.data();
-          setRole(data.role || null);
-        }
-      } catch (error) {
-        console.error("AUTH CONTEXT ERROR:", error);
-      }
-
+    // Evitar ejecutar Firebase Auth durante SSR/build
+    if (!auth) {
       setLoading(false);
-    });
+      return;
+    }
+
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      async (firebaseUser) => {
+        if (!firebaseUser) {
+          setUser(null);
+          setRole(null);
+          setLoading(false);
+          return;
+        }
+
+        setUser(firebaseUser);
+
+        try {
+          const userRef = doc(db, "users", firebaseUser.uid);
+
+          const userSnap = await getDoc(userRef);
+
+          if (userSnap.exists()) {
+            const data = userSnap.data();
+
+            setRole(data.role || null);
+          }
+        } catch (error) {
+          console.error("AUTH CONTEXT ERROR:", error);
+        }
+
+        setLoading(false);
+      }
+    );
 
     return () => unsubscribe();
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, role, loading }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        role,
+        loading,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
