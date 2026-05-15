@@ -1,72 +1,174 @@
 "use client";
 
-import { ReactNode, useEffect, useState } from "react";
+import {
+  ReactNode,
+  useEffect,
+  useState,
+} from "react";
+
 import { useRouter } from "next/navigation";
 
-import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import {
+  onAuthStateChanged,
+} from "firebase/auth";
 
-import { db, auth } from "@/lib/firebase-client";
+import {
+  doc,
+  getDoc,
+} from "firebase/firestore";
+
+import {
+  db,
+  auth,
+} from "@/lib/firebase-client";
+
+// ========================================
+// TYPES
+// ========================================
 
 interface Props {
   children: ReactNode;
 }
 
-export default function SuperAdminGuard({ children }: Props) {
-  const router = useRouter();
-  const isFirebaseReady = Boolean(auth && db);
+// ========================================
+// COMPONENT
+// ========================================
 
-  const [authorized, setAuthorized] = useState(false);
-  const [loading, setLoading] = useState(isFirebaseReady);
+export default function SuperAdminGuard({
+  children,
+}: Props) {
+  const router = useRouter();
+
+  const [authorized, setAuthorized] =
+    useState(false);
+
+  const [loading, setLoading] =
+    useState(true);
 
   useEffect(() => {
-    if (!isFirebaseReady || !auth || !db) {
+    // ========================================
+    // FIREBASE SAFETY
+    // ========================================
+
+    if (!auth || !db) {
+      setLoading(false);
       return;
     }
 
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      try {
-        if (!user) {
-          router.push("/superadmin");
-          return;
+    const unsubscribe =
+      onAuthStateChanged(
+        auth,
+        async (user) => {
+          try {
+            // ========================================
+            // NO USER
+            // ========================================
+
+            if (!user) {
+              setAuthorized(false);
+
+              router.replace(
+                "/superadmin"
+              );
+
+              return;
+            }
+
+            // ========================================
+            // GET USER DOC
+            // ========================================
+
+            const userRef = doc(
+              db,
+              "users",
+              user.uid
+            );
+
+            const userSnap =
+              await getDoc(userRef);
+
+            // ========================================
+            // USER NOT FOUND
+            // ========================================
+
+            if (!userSnap.exists()) {
+              setAuthorized(false);
+
+              router.replace(
+                "/superadmin"
+              );
+
+              return;
+            }
+
+            const data =
+              userSnap.data();
+
+            // ========================================
+            // ROLE CHECK
+            // ========================================
+
+            if (
+              data.role !==
+              "superadmin"
+            ) {
+              setAuthorized(false);
+
+              router.replace(
+                "/superadmin"
+              );
+
+              return;
+            }
+
+            // ========================================
+            // SUCCESS
+            // ========================================
+
+            setAuthorized(true);
+          } catch (error) {
+            console.error(
+              "SUPER ADMIN GUARD ERROR:",
+              error
+            );
+
+            setAuthorized(false);
+
+            router.replace(
+              "/superadmin"
+            );
+          } finally {
+            setLoading(false);
+          }
         }
-
-        const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
-
-        if (!userSnap.exists()) {
-          router.push("/superadmin");
-          return;
-        }
-
-        const data = userSnap.data();
-
-        if (data.role !== "superadmin") {
-          router.push("/superadmin");
-          return;
-        }
-
-        setAuthorized(true);
-      } catch (error) {
-        console.error("AUTH GUARD ERROR:", error);
-        router.push("/superadmin");
-      } finally {
-        setLoading(false);
-      }
-    });
+      );
 
     return () => unsubscribe();
-  }, [isFirebaseReady, router]);
+  }, [router]);
+
+  // ========================================
+  // LOADING
+  // ========================================
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-white bg-black">
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
         Verificando acceso...
       </div>
     );
   }
 
-  if (!authorized) return null;
+  // ========================================
+  // BLOCK
+  // ========================================
+
+  if (!authorized) {
+    return null;
+  }
+
+  // ========================================
+  // SUCCESS
+  // ========================================
 
   return <>{children}</>;
 }

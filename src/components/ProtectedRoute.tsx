@@ -1,15 +1,29 @@
 "use client";
 
-import { useEffect } from "react";
+import {
+  useEffect,
+} from "react";
 
-import { useRouter } from "next/navigation";
+import {
+  useRouter,
+} from "next/navigation";
 
-import { useAuth } from "@/context/AuthContext";
+import {
+  useAuth,
+} from "@/context/AuthContext";
+
+// ========================================
+// TYPES
+// ========================================
 
 type Props = {
   children: React.ReactNode;
   allowedRole: string;
 };
+
+// ========================================
+// COMPONENT
+// ========================================
 
 export default function ProtectedRoute({
   children,
@@ -17,32 +31,68 @@ export default function ProtectedRoute({
 }: Props) {
   const router = useRouter();
 
-  const { user, role, loading } = useAuth();
+  const {
+    user,
+    role,
+    loading,
+  } = useAuth();
 
   useEffect(() => {
-    if (loading) return;
+    // ========================================
+    // WAIT AUTH
+    // ========================================
 
-    if (!user) {
-      router.push("/login");
+    if (loading) {
       return;
     }
 
-    if (role !== allowedRole) {
-      router.push("/login");
+    // ========================================
+    // NO USER
+    // ========================================
+
+    if (!user) {
+      router.replace("/login");
+      return;
     }
-  }, [user, role, loading, allowedRole, router]);
+
+    // ========================================
+    // ROLE BLOCK
+    // ========================================
+
+    if (role !== allowedRole) {
+      router.replace("/login");
+    }
+  }, [
+    user,
+    role,
+    loading,
+    allowedRole,
+    router,
+  ]);
+
+  // ========================================
+  // LOADING
+  // ========================================
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
         Cargando...
       </div>
     );
   }
 
+  // ========================================
+  // BLOCK
+  // ========================================
+
   if (!user || role !== allowedRole) {
     return null;
   }
+
+  // ========================================
+  // SUCCESS
+  // ========================================
 
   return <>{children}</>;
 }
