@@ -1,31 +1,41 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "target": "es2022",
+    "target": "es2020",
+
     "outDir": "lib",
     "rootDir": "src",
-    "allowJs": true,
-    "checkJs": false,
+
     "strict": true,
+
     "noImplicitAny": true,
     "strictNullChecks": true,
     "strictFunctionTypes": true,
     "strictBindCallApply": true,
     "strictPropertyInitialization": true,
+
     "noImplicitThis": true,
     "alwaysStrict": true,
+
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
+
     "esModuleInterop": true,
+
     "skipLibCheck": true,
+
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node",
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+
+    "moduleResolution": "node"
   },
-  "include": ["src/**/*"],
+
+  "include": [
+    "src/**/*"
+  ],
+
   "exclude": [
     "node_modules",
     "lib",
